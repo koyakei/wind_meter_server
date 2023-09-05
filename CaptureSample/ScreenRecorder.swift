@@ -131,6 +131,7 @@ class ScreenRecorder: ObservableObject {
             isRunning = true
             // Start the stream and await new video frames.
             for try await frame in captureEngine.startCapture(configuration: config, filter: filter) {
+                
                 capturePreview.updateFrame(frame)
                 if contentSize != frame.size {
                     // Update the content size if it changed.

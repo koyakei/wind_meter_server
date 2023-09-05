@@ -11,7 +11,6 @@ import OSLog
 import Combine
 
 struct ContentView: View {
-    
     @State var userStopped = false
     @State var disableInput = false
     @State var isUnauthorized = false
@@ -20,6 +19,7 @@ struct ContentView: View {
     
     var body: some View {
         HSplitView {
+//            Text(screenRecorder.windSpeed)
             ConfigurationView(screenRecorder: screenRecorder, userStopped: $userStopped)
                 .frame(minWidth: 280, maxWidth: 280)
                 .disabled(disableInput)

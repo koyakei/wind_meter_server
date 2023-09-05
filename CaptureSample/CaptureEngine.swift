@@ -10,6 +10,11 @@ import AVFAudio
 import ScreenCaptureKit
 import OSLog
 import Combine
+import Vision
+import SwiftUI
+import CoreImage
+import CoreVideo
+import VideoToolbox
 
 /// A structure that contains the video data to render.
 struct CapturedFrame {
@@ -26,7 +31,6 @@ struct CapturedFrame {
 class CaptureEngine: NSObject, @unchecked Sendable {
     
     private let logger = Logger()
-    
     private var stream: SCStream?
     private let videoSampleBufferQueue = DispatchQueue(label: "com.example.apple-samplecode.VideoSampleBufferQueue")
     private let audioSampleBufferQueue = DispatchQueue(label: "com.example.apple-samplecode.AudioSampleBufferQueue")
@@ -86,6 +90,7 @@ private class CaptureEngineStreamOutput: NSObject, SCStreamOutput, SCStreamDeleg
     var pcmBufferHandler: ((AVAudioPCMBuffer) -> Void)?
     var capturedFrameHandler: ((CapturedFrame) -> Void)?
     
+    var windSpeed = WindSpeed()
     // Store the the startCapture continuation, so you can cancel it if an error occurs.
     private var continuation: AsyncThrowingStream<CapturedFrame, Error>.Continuation?
     
@@ -104,6 +109,7 @@ private class CaptureEngineStreamOutput: NSObject, SCStreamOutput, SCStreamDeleg
         case .screen:
             // Create a CapturedFrame structure for a video sample buffer.
             guard let frame = createFrame(for: sampleBuffer) else { return }
+            
             capturedFrameHandler?(frame)
         case .audio:
             // Create an AVAudioPCMBuffer from an audio sample buffer.
@@ -128,10 +134,51 @@ private class CaptureEngineStreamOutput: NSObject, SCStreamOutput, SCStreamDeleg
               status == .complete else { return nil }
         
         // Get the pixel buffer that contains the image data.
-        guard let pixelBuffer = sampleBuffer.imageBuffer else { return nil }
+        guard let buff  = sampleBuffer.imageBuffer else { return nil}
+        guard let timageBuffer : CVPixelBuffer = CIImage(cvImageBuffer: buff)
+            .pixelBuffer else { return nil }
+        var cgImage: CGImage?
+        VTCreateCGImageFromCVPixelBuffer(timageBuffer, options: nil, imageOut: &cgImage)
+        guard let resimage : CGImage = cgImage?.cropping(to: CGRect(x:500, y: 280, width: 90, height: 140)) else { return nil}
+        guard let afterPointmage : CGImage = cgImage?.cropping(to: CGRect(x:720, y: 280, width: 90, height: 140)) else { return nil}
+        let convImage = timageBuffer as CVPixelBuffer
+        let pixelBuffer : CVImageBuffer = convImage
+        let handler = VNImageRequestHandler(cgImage: resimage)
+        let afterPointHandler = VNImageRequestHandler(cgImage: afterPointmage)
+        var firstDigit : String = ""
+        let firstDigitRequest = VNRecognizeTextRequest { (request, error) in
+            if let results = request.results as? [VNRecognizedTextObservation] {
+                firstDigit = results.compactMap { observation in
+                    observation.topCandidates(1).first?.string
+                }.first ?? ""
+                self.windSpeed.firstDigit = firstDigit
+            }
+        }
+        
+        firstDigitRequest.recognitionLevel = .accurate
+        firstDigitRequest.recognitionLanguages = ["ja-JP"]
+        let afterPoingDigitRequest = VNRecognizeTextRequest { (request, error) in
+            if let results = request.results as? [VNRecognizedTextObservation] {
+                self.windSpeed.subZeroFirstDigit = results.compactMap { observation in
+                    observation.topCandidates(1).first?.string
+                }.first ?? ""
+                
+            }
+        }
+        afterPoingDigitRequest.recognitionLevel = .accurate
+        afterPoingDigitRequest.recognitionLanguages = ["ja-JP"]
+        DispatchQueue.global(qos: .userInteractive).async {
+            do {
+                try handler.perform([firstDigitRequest])
+                try afterPointHandler.perform([afterPoingDigitRequest])
+            } catch {
+            }
+        }
+        
         
         // Get the backing IOSurface.
         guard let surfaceRef = CVPixelBufferGetIOSurface(pixelBuffer)?.takeUnretainedValue() else { return nil }
+        
         let surface = unsafeBitCast(surfaceRef, to: IOSurface.self)
         
         // Retrieve the content rectangle, scale, and scale factor.
@@ -139,12 +186,14 @@ private class CaptureEngineStreamOutput: NSObject, SCStreamOutput, SCStreamDeleg
               let contentRect = CGRect(dictionaryRepresentation: contentRectDict as! CFDictionary),
               let contentScale = attachments[.contentScale] as? CGFloat,
               let scaleFactor = attachments[.scaleFactor] as? CGFloat else { return nil }
-        
         // Create a new frame with the relevant data.
         let frame = CapturedFrame(surface: surface,
                                   contentRect: contentRect,
                                   contentScale: contentScale,
                                   scaleFactor: scaleFactor)
+        
+        
+        print(windSpeed.showSpeed())
         return frame
     }
     
@@ -162,5 +211,15 @@ private class CaptureEngineStreamOutput: NSObject, SCStreamOutput, SCStreamDeleg
     
     func stream(_ stream: SCStream, didStopWithError error: Error) {
         continuation?.finish(throwing: error)
+    }
+    
+
+}
+
+struct WindSpeed{
+    var firstDigit: String = "0"
+    var subZeroFirstDigit: String = "0"
+    func showSpeed() -> String{
+        firstDigit + "." + subZeroFirstDigit
     }
 }
