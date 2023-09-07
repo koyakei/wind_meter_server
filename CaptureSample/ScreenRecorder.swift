@@ -30,7 +30,7 @@ class ScreenRecorder: ObservableObject {
     @Published var isRunning = false
     
     // MARK: - Video Properties
-    @Published var captureType: CaptureType = .display {
+    @Published var captureType: CaptureType = .window {
         didSet { updateEngine() }
     }
     
@@ -59,7 +59,7 @@ class ScreenRecorder: ObservableObject {
     @Published private(set) var availableWindows = [SCWindow]()
     
     // MARK: - Audio Properties
-    @Published var isAudioCaptureEnabled = true {
+    @Published var isAudioCaptureEnabled = false {
         didSet {
             updateEngine()
             if isAudioCaptureEnabled {
@@ -221,7 +221,7 @@ class ScreenRecorder: ObservableObject {
         }
         
         // Set the capture interval at 60 fps.
-        streamConfig.minimumFrameInterval = CMTime(value: 1, timescale: 60)
+        streamConfig.minimumFrameInterval = CMTime(value: 1, timescale: 1)
         
         // Increase the depth of the frame queue to ensure high fps at the expense of increasing
         // the memory footprint of WindowServer.

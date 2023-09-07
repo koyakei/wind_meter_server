@@ -26,7 +26,7 @@
 		7C6C99F1D4B6E3EBA3A7B7DF /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 		8D89E0E7125AFE6B4E2E6500 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		9AEEB9169F5D7FC75E6B35A2 /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = SampleCode.xcconfig; path = Configuration/SampleCode.xcconfig; sourceTree = "<group>"; };
-		BA8B905F2AA6EC6100677580 /* shot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = shot.png; sourceTree = "<group>"; };
+		BA8B905F2AA6EC6100677580 /* shot2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = shot2.png; sourceTree = "<group>"; };
 		C44093722816EC8800FB8386 /* Synth.aif */ = {isa = PBXFileReference; lastKnownFileType = file; path = Synth.aif; sourceTree = "<group>"; };
 		C44093742816EC9C00FB8386 /* AudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayer.swift; sourceTree = "<group>"; };
 		C470F0802811C5CB00D29309 /* ScreenRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenRecorder.swift; sourceTree = "<group>"; };
@@ -85,7 +85,7 @@
 		C4B0DA9E276BA4460015082A = {
 			isa = PBXGroup;
 			children = (
-				BA8B905F2AA6EC6100677580 /* shot.png */,
+				BA8B905F2AA6EC6100677580 /* shot2.png */,
 				8D89E0E7125AFE6B4E2E6500 /* README.md */,
 				C4B0DAA9276BA4460015082A /* CaptureSample */,
 				C4B0DAA8276BA4460015082A /* Products */,

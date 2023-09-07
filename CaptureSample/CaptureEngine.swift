@@ -141,10 +141,14 @@ private class CaptureEngineStreamOutput: NSObject, SCStreamOutput, SCStreamDeleg
         VTCreateCGImageFromCVPixelBuffer(timageBuffer, options: nil, imageOut: &cgImage)
         guard let resimage : CGImage = cgImage?.cropping(to: CGRect(x:500, y: 280, width: 90, height: 140)) else { return nil}
         guard let afterPointmage : CGImage = cgImage?.cropping(to: CGRect(x:720, y: 280, width: 90, height: 140)) else { return nil}
+        // two range
+//        guard let secondDigitImage : CGImage = cgImage?.cropping(to: CGRect(x:330, y: 280, width: 290, height: 140)) else { return nil}
+        guard let secondDigitImage : CGImage = cgImage?.cropping(to: CGRect(x:330, y: 280, width: 130, height: 140)) else { return nil}
         let convImage = timageBuffer as CVPixelBuffer
         let pixelBuffer : CVImageBuffer = convImage
         let handler = VNImageRequestHandler(cgImage: resimage)
         let afterPointHandler = VNImageRequestHandler(cgImage: afterPointmage)
+        let secondDigitHandler = VNImageRequestHandler(cgImage: secondDigitImage)
         var firstDigit : String = ""
         let firstDigitRequest = VNRecognizeTextRequest { (request, error) in
             if let results = request.results as? [VNRecognizedTextObservation] {
@@ -156,7 +160,6 @@ private class CaptureEngineStreamOutput: NSObject, SCStreamOutput, SCStreamDeleg
         }
         
         firstDigitRequest.recognitionLevel = .accurate
-        firstDigitRequest.recognitionLanguages = ["ja-JP"]
         let afterPoingDigitRequest = VNRecognizeTextRequest { (request, error) in
             if let results = request.results as? [VNRecognizedTextObservation] {
                 self.windSpeed.subZeroFirstDigit = results.compactMap { observation in
@@ -165,12 +168,30 @@ private class CaptureEngineStreamOutput: NSObject, SCStreamOutput, SCStreamDeleg
                 
             }
         }
+        do {
+            
+        }
+        let secondDigitRequest = VNRecognizeTextRequest { (request, error) in
+            if let error = error {
+                self.windSpeed.secondDigit = "0"
+            }
+            if let results = request.results as? [VNRecognizedTextObservation] {
+                if results.count == 0 {
+                    self.windSpeed.secondDigit = "0"
+                } else {
+                    self.windSpeed.secondDigit = results.first?.topCandidates(1).first?.string ?? ""
+                }
+                    
+            }
+        }
+        secondDigitRequest.recognitionLevel = .accurate
         afterPoingDigitRequest.recognitionLevel = .accurate
         afterPoingDigitRequest.recognitionLanguages = ["ja-JP"]
         DispatchQueue.global(qos: .userInteractive).async {
             do {
                 try handler.perform([firstDigitRequest])
                 try afterPointHandler.perform([afterPoingDigitRequest])
+                try secondDigitHandler.perform([secondDigitRequest])
             } catch {
             }
         }
@@ -194,7 +215,42 @@ private class CaptureEngineStreamOutput: NSObject, SCStreamOutput, SCStreamDeleg
         
         
         print(windSpeed.showSpeed())
+        getItemInfoTapped(windSpeed.showSpeed())
         return frame
+    }
+    
+    
+    func getItemInfoTapped(_ speedString: String) {
+
+        let url = URL(string: "https://mysite-906r.onrender.com/wind_speed_hayamas/1.json")!
+
+        let data: [String: Any] = ["wind_speed_hayama": ["speed_string" : speedString]]
+        guard let httpBody = try? JSONSerialization.data(withJSONObject: data, options: []) else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue( //3
+            "Bearer",
+            forHTTPHeaderField: "Authorization"
+        )
+        request.httpBody = httpBody
+
+        URLSession.shared.dataTask(with: request) {(data, response, error) in
+
+            if let error = error {
+                print("Failed to get item info: \(error)")
+                return;
+            }
+
+            guard let data = data else { return }
+            do {
+                let object = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] 
+            } catch let error {
+                print(error)
+            }
+
+        }.resume()
     }
     
     // Creates an AVAudioPCMBuffer instance on which to perform an average and peak audio level calculation.
@@ -219,7 +275,8 @@ private class CaptureEngineStreamOutput: NSObject, SCStreamOutput, SCStreamDeleg
 struct WindSpeed{
     var firstDigit: String = "0"
     var subZeroFirstDigit: String = "0"
+    var secondDigit: String = "0"
     func showSpeed() -> String{
-        firstDigit + "." + subZeroFirstDigit
+        secondDigit + firstDigit + "." + subZeroFirstDigit
     }
 }
