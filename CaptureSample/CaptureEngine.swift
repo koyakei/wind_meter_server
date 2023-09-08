@@ -137,13 +137,16 @@ private class CaptureEngineStreamOutput: NSObject, SCStreamOutput, SCStreamDeleg
         guard let buff  = sampleBuffer.imageBuffer else { return nil}
         guard let timageBuffer : CVPixelBuffer = CIImage(cvImageBuffer: buff)
             .pixelBuffer else { return nil }
+        let firstDigitRect = CGRect(x:480, y: 280, width: 130, height: 140)
+        let secondDigitRect = CGRect(x:330, y: 280, width: 130, height: 140)
+        let subZeroFirstDigitRect = CGRect(x:710, y: 280, width: 130, height: 140)
         var cgImage: CGImage?
         VTCreateCGImageFromCVPixelBuffer(timageBuffer, options: nil, imageOut: &cgImage)
-        guard let resimage : CGImage = cgImage?.cropping(to: CGRect(x:500, y: 280, width: 90, height: 140)) else { return nil}
-        guard let afterPointmage : CGImage = cgImage?.cropping(to: CGRect(x:720, y: 280, width: 90, height: 140)) else { return nil}
+        guard let resimage : CGImage = cgImage?.cropping(to: firstDigitRect) else { return nil}
+        guard let afterPointmage : CGImage = cgImage?.cropping(to: subZeroFirstDigitRect) else { return nil}
         // two range
 //        guard let secondDigitImage : CGImage = cgImage?.cropping(to: CGRect(x:330, y: 280, width: 290, height: 140)) else { return nil}
-        guard let secondDigitImage : CGImage = cgImage?.cropping(to: CGRect(x:330, y: 280, width: 130, height: 140)) else { return nil}
+        guard let secondDigitImage : CGImage = cgImage?.cropping(to: secondDigitRect) else { return nil}
         let convImage = timageBuffer as CVPixelBuffer
         let pixelBuffer : CVImageBuffer = convImage
         let handler = VNImageRequestHandler(cgImage: resimage)
