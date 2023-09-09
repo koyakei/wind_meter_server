@@ -178,7 +178,7 @@ private class CaptureEngineStreamOutput: NSObject, SCStreamOutput, SCStreamDeleg
             }
             if let results = request.results as? [VNRecognizedTextObservation] {
                 if results.count == 0 {
-                    self.windSpeed.secondDigit = "e2"
+                    self.windSpeed.secondDigit = ""
                 } else {
                     self.windSpeed.secondDigit = results.first?.topCandidates(1).first?.string ?? "e2"
                 }
