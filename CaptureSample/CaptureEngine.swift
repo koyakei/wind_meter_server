@@ -152,13 +152,11 @@ private class CaptureEngineStreamOutput: NSObject, SCStreamOutput, SCStreamDeleg
         let handler = VNImageRequestHandler(cgImage: resimage)
         let afterPointHandler = VNImageRequestHandler(cgImage: afterPointmage)
         let secondDigitHandler = VNImageRequestHandler(cgImage: secondDigitImage)
-        var firstDigit : String = ""
         let firstDigitRequest = VNRecognizeTextRequest { (request, error) in
             if let results = request.results as? [VNRecognizedTextObservation] {
-                firstDigit = results.compactMap { observation in
+                self.windSpeed.firstDigit = results.compactMap { observation in
                     observation.topCandidates(1).first?.string
-                }.first ?? ""
-                self.windSpeed.firstDigit = firstDigit
+                }.first ?? "e1"
             }
         }
         
@@ -167,7 +165,7 @@ private class CaptureEngineStreamOutput: NSObject, SCStreamOutput, SCStreamDeleg
             if let results = request.results as? [VNRecognizedTextObservation] {
                 self.windSpeed.subZeroFirstDigit = results.compactMap { observation in
                     observation.topCandidates(1).first?.string
-                }.first ?? ""
+                }.first ?? "es1"
                 
             }
         }
@@ -176,13 +174,13 @@ private class CaptureEngineStreamOutput: NSObject, SCStreamOutput, SCStreamDeleg
         }
         let secondDigitRequest = VNRecognizeTextRequest { (request, error) in
             if let error = error {
-                self.windSpeed.secondDigit = "0"
+                self.windSpeed.secondDigit = "e2"
             }
             if let results = request.results as? [VNRecognizedTextObservation] {
                 if results.count == 0 {
-                    self.windSpeed.secondDigit = "0"
+                    self.windSpeed.secondDigit = "e2"
                 } else {
-                    self.windSpeed.secondDigit = results.first?.topCandidates(1).first?.string ?? ""
+                    self.windSpeed.secondDigit = results.first?.topCandidates(1).first?.string ?? "e2"
                 }
                     
             }
