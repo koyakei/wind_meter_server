@@ -161,6 +161,9 @@ private class CaptureEngineStreamOutput: NSObject, SCStreamOutput, SCStreamDeleg
         }
         
         firstDigitRequest.recognitionLevel = .accurate
+        firstDigitRequest.minimumTextHeight = 0.5
+        firstDigitRequest.recognitionLanguages = ["ja-JP"]
+        firstDigitRequest.usesLanguageCorrection = false
         let afterPoingDigitRequest = VNRecognizeTextRequest { (request, error) in
             if let results = request.results as? [VNRecognizedTextObservation] {
                 self.windSpeed.subZeroFirstDigit = results.compactMap { observation in
@@ -169,9 +172,10 @@ private class CaptureEngineStreamOutput: NSObject, SCStreamOutput, SCStreamDeleg
                 
             }
         }
-        do {
-            
-        }
+        
+        afterPoingDigitRequest.recognitionLevel = .accurate
+        afterPoingDigitRequest.recognitionLanguages = ["ja-JP"]
+        afterPoingDigitRequest.minimumTextHeight = 0.5
         let secondDigitRequest = VNRecognizeTextRequest { (request, error) in
             if let error = error {
                 self.windSpeed.secondDigit = "e2"
@@ -186,8 +190,8 @@ private class CaptureEngineStreamOutput: NSObject, SCStreamOutput, SCStreamDeleg
             }
         }
         secondDigitRequest.recognitionLevel = .accurate
-        afterPoingDigitRequest.recognitionLevel = .accurate
-        afterPoingDigitRequest.recognitionLanguages = ["ja-JP"]
+        secondDigitRequest.recognitionLanguages = ["ja-JP"]
+        secondDigitRequest.minimumTextHeight = 0.5
         DispatchQueue.global(qos: .userInteractive).async {
             do {
                 try handler.perform([firstDigitRequest])
